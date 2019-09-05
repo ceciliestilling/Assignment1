@@ -111,7 +111,8 @@ Tip: The stringr package is what you need. str_extract () will allow you to extr
 
 
 ```{r}
-str_extract(LU_train$VISIT, "\\d")
+LU_train[2] <- str_extract(LU_train$VISIT, "\\d")
+token_train[2] <- str_extract(token_train$VISIT, "\\d")
 
 ```
 
@@ -123,7 +124,9 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 
 ```{r}
-
+demo_train$SUBJ <- str_remove_all(demo_train$SUBJ, "\\.")
+token_train$SUBJ <- str_remove_all(token_train$SUBJ, "\\.")
+LU_train$SUBJ <- str_remove_all(LU_train$SUBJ, "\\.")
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -159,7 +162,11 @@ Most variables should make sense, here the less intuitive ones.
 Feel free to rename the variables into something you can remember (i.e. nonVerbalIQ, verbalIQ)
 
 ```{r}
+demo_train_subset <- select(demo_train, SUBJ, VISIT, Diagnosis, Ethnicity, Gender, Age, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
 
+LU_train_subset <- select(LU_train, SUBJ, VISIT, MOT_MLU, CHI_MLU)
+
+token_train_subset <- select(token_train, SUBJ, VISIT, types_MOT, types_CHI, tokens_MOT, tokens_CHI)
 ```
 
 2e. Finally we are ready to merge all the data sets into just one. 
@@ -169,7 +176,9 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
-
+?merge
+train2 <- merge(demo_train_subset, LU_train_subset)
+train <- merge(train2, token_train_subset)
 
 ```
 
@@ -185,7 +194,15 @@ A possible way to do so:
 
 
 ```{r}
+df <- train[train$VISIT == "1",]
 
+
+df2 <- select(df, SUBJ, ADOS, MullenRaw, ExpressiveLangRaw, Socialization)
+colnames(df2)[2] <- "ADOS1"
+colnames(df2)[3] <- "MullenRaw1"
+colnames(df2)[4] <- "ExpressiveLangRaw1"
+colnames(df2)[5] <- "Socialization1"
+train_merge <- merge(df2, train)
 ```
 
 2g. Final touches
