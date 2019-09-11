@@ -71,14 +71,9 @@ Load the three data sets, after downloading them from dropbox and saving them in
 
 ```{r}
 # Loading data sets 
-demo_train <- read.csv("demo_train.csv", header = T, sep = ",")
-LU_train <- read.csv("LU_train.csv", header = T, sep = ",")
-token_train <- read.csv("token_train.csv", header = T, sep = ",")
-
-# Checking column names
-head(demo_train)
-head(LU_train)
-head(token_train)
+demo_train <- read.csv('demo_train.csv', header = T, sep =',')
+token_train <- read.csv('token_train.csv', header = T, sep =',')
+LU_train <- read.csv('LU_train.csv', header = T, sep = ',')
 
 ```
 
@@ -99,10 +94,9 @@ Tip: look through the chapter on data transformation in R for data science (http
 
 
 ```{r}
-# Changing the column name from Child.ID to SUBJ on the demo train data set
-names(demo_train)[names(demo_train) == "Child.ID"] <- "SUBJ"
-# Doing the same for the visit column
-names(demo_train)[names(demo_train) == "Visit"] <- "VISIT"
+# Changing the name of col names so they are the same
+colnames(demo_train)[1]<- 'SUBJ'
+colnames(demo_train)[2]<- 'VISIT'
 ```
 
 2b. Find a way to homogeneize the way "visit" is reported (visit1 vs. 1).
@@ -111,8 +105,8 @@ Tip: The stringr package is what you need. str_extract () will allow you to extr
 
 
 ```{r}
-LU_train[2] <- str_extract(LU_train$VISIT, "\\d")
-token_train[2] <- str_extract(token_train$VISIT, "\\d")
+LU_train[2] <- str_extract(LU_train$VISIT,'\\d')
+token_train[2] <- str_extract(token_train$VISIT,'\\d')
 
 ```
 
@@ -124,9 +118,12 @@ Tip: You can either have one line of code for each child name that is to be chan
 
 
 ```{r}
-demo_train$SUBJ <- str_remove_all(demo_train$SUBJ, "\\.")
-token_train$SUBJ <- str_remove_all(token_train$SUBJ, "\\.")
-LU_train$SUBJ <- str_remove_all(LU_train$SUBJ, "\\.")
+?str_replace_all
+demo_train$SUBJ <- str_remove_all(demo_train$SUBJ,"\\.")
+
+LU_train$SUBJ <- str_remove_all(LU_train$SUBJ,"\\.")
+
+token_train$SUBJ <- str_remove_all(token_train$SUBJ,"\\.")
 ```
 
 2d. Now that the nitty gritty details of the different data sets are fixed, we want to make a subset of each data set only containig the variables that we wish to use in the final data set.
@@ -176,9 +173,9 @@ Some things to pay attention to:
 * make sure to understand whether (and if so why) there are NAs in the dataset (e.g. some measures were not taken at all visits, some recordings were lost or permission to use was withdrawn)
 
 ```{r}
-?merge
-train2 <- merge(demo_train_subset, LU_train_subset)
-train <- merge(train2, token_train_subset)
+train_2 <- merge(demo_train_subset, LU_train_subset)
+
+train <- merge(train_2, token_train_subset)
 
 ```
 
@@ -202,7 +199,8 @@ colnames(df2)[2] <- "ADOS1"
 colnames(df2)[3] <- "MullenRaw1"
 colnames(df2)[4] <- "ExpressiveLangRaw1"
 colnames(df2)[5] <- "Socialization1"
-train_merge <- merge(df2, train)
+
+merge_train <- merge(df2, train)
 ```
 
 2g. Final touches
@@ -214,6 +212,22 @@ Now we want to
 
 ```{r}
 
+#giving understandable values to gender 
+merge_train$Gender[merge_train$Gender == "1"] <- "F"
+merge_train$Gender[merge_train$Gender == "2"] <- "M"
+
+#chaning the names of diagnosis
+merge_train$Diagnosis <- as.character(merge_train$Diagnosis)
+
+merge_train$Diagnosis[merge_train$Diagnosis == "A"] <- "ASD"
+merge_train$Diagnosis[merge_train$Diagnosis == "B"] <- "TD"
+
+#anonymizing the participants
+merge_train$SUBJ <- as.factor(merge_train$SUBJ)
+a <- seq(1, 61)
+levels(merge_train$SUBJ) <- a
+
+write.csv(merge_train, file = 'train.csv')
 ```
 
 
